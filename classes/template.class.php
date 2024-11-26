@@ -16,7 +16,7 @@ class appTemplate {
     Creates a new Template object and sets its associated file.
     */
     public function __construct($file) {
-        $this->file = APPLICATION_PATH .DS."views" .DS. $file;
+        $this->file = APPLICATION_PATH . DS . "views" . DS . $file;
     }
     
     public function init()
@@ -27,7 +27,18 @@ class appTemplate {
     
     public static function getBaseUrl()
     {
-        return dirname($_SERVER['PHP_SELF']);
+        // Determine if HTTPS is being used
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https" : "http";
+
+        // Get host and current script path
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptPath = dirname($_SERVER['PHP_SELF']);
+
+        // Build the base URL
+        $baseUrl = $protocol . "://" . $host . $scriptPath;
+
+        // Remove trailing slash if present
+        return rtrim($baseUrl, '/');
     }
 
     /*
@@ -63,8 +74,8 @@ class appTemplate {
         $output = "";
 
         foreach ($templates as $template) {
-            $content = (get_class($template) !== "Template")
-                ? "Error, incorrect type - expected Template."
+            $content = (get_class($template) !== "appTemplate")
+                ? "Error, incorrect type - expected appTemplate."
                 : $template->output();
             $output .= $content . $separator;
         }
@@ -88,22 +99,21 @@ class appTemplate {
     {
         $layout = new appTemplate("layout.phtml");
         
-        if(isset($_SESSION['msg']))
-        {
+        if (isset($_SESSION['msg'])) {
             $layout->set("message", $_SESSION['msg']);
             $layout->set("message_class", "extra");
             unset($_SESSION['msg']);
         }
         
-        
-        if(is_array($params))
-        foreach($params as $key=>$value)
-            $layout->set($key, $value);
+        if (is_array($params)) {
+            foreach ($params as $key => $value) {
+                $layout->set($key, $value);
+            }
+        }
                 
         $layout->init();
         
         return preg_replace("/\[@(.*)\]/", "", $layout->output());
     }
     
-   
 }
