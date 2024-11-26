@@ -1,0 +1,52 @@
+<h1>[@pageTitle]</h1>
+
+<form action="javascript:doPreview();" method="POST" class="news-form" id="news-form">
+    <input type="hidden" name="news_id" value="[@news_id]">
+    <fieldset>
+    <legend>News details:</legend>
+        <input type="text" name="title" id="input-title" placeholder="Title" required value="[@input_title]" /><br>
+        <input type="text" name="author" id="input-author" placeholder="Author" required  value="[@input_author]" /><br>
+        <input type="date" name="date" id="input-date" placeholder="Date"  value="[@input_date]" /> <input type="time" id="input-time" name="time" placeholder="Time"  value="[@input_time]" /><br />
+        <textarea name="content" cols="45" rows="7" id="input-content" placeholder="Content" required >[@input_content]</textarea><br />
+        <input type="Submit" name="Submit"> <input type="button" value="Cancel" onclick="window.location='[@baseUrl]'">
+  </fieldset>
+</form>
+
+<div id="news_preview">
+    <fieldset>
+    <legend>News preview:</legend>
+        <h1 id="title"></h1>
+        <h2>Submitted by <span id="author"></span> on <span id="date"></span></h2>
+        <p id="content"></p>
+        <p>
+            <input type="Submit" name="Submit" value="Confirm Submit" onclick="document.getElementById('news-form').action='';doSubmit(); return false;"> <input type="button" value="Cancel Preview" onclick="doCancel();">
+        </p>
+    </legend>
+    </fieldset>
+</div>
+
+<script>
+    function doSubmit()
+    {
+        doCancel();
+        document.getElementById("news-form").submit();
+    }
+    function doCancel()
+    {
+        document.getElementById("news-form").style.display = "block";
+        document.getElementById("news_preview").style.display = "none";
+    }
+    function doPreview()
+    {
+        document.getElementById("news-form").style.display = "none";
+        document.getElementById("news_preview").style.display = "block";
+        
+        
+        document.getElementById("title").innerHTML = document.getElementById("input-title").value;
+        document.getElementById("date").innerHTML = document.getElementById("input-date").value +" "+document.getElementById("input-time").value;
+        document.getElementById("author").innerHTML = document.getElementById("input-author").value;
+        document.getElementById("content").innerHTML = document.getElementById("input-content").value;
+        
+        return false;
+    }
+</script>

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+   <HEAD>
+      <TITLE>[@title]</TITLE>
+       <link rel="stylesheet" href="[@baseUrl]/assets/css/style.css">
+   </HEAD>
+   <BODY>
+       <div class="wrapper">
+           <div class="top">
+               <span id="logo"><strong>bab.la</strong></span>
+               <div class="menu">
+                 <ul>
+                     <li><a href="[@baseUrl]">Home</a></li>
+                     <li class="last"><a href="[@baseUrl]/add/">Submit News</a></li>
+                   </ul> 
+               </div>
+               <div class="search">
+                   <form method="GET" action="[@baseUrl]/search/">
+                       <input type="text" name="query" placeHolder="Search News" value="[@query]" required /> <input type="submit" name="Go" >
+                   </form>
+               </div>   
+           </div>
+           <div class="content">
+               <div class="[@message_class]">
+                   [@message]
+               </div>
+                [@content]
+           </div>
+        
+       </div>
+   </BODY>
+</HTML>
