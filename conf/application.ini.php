@@ -1,17 +1,14 @@
-; Configuration file for the application
-; Ensure this file is properly secured and not accessible publicly
-
 [main]
 ; Directory where the application is located
 application.directory = "/application/"
 
 [database]
 ; Database connection details
-username = "ionut"
-password = "ionut"
-db = "news"
-server = "127.0.0.1"
-port = 3306
+username = "${DB_USERNAME}"
+password = "${DB_PASSWORD}"
+db = "${DB_NAME}"
+server = "${DB_HOST}"
+port = "${DB_PORT}"
 
 [route]
 ; Routes mapping to actions

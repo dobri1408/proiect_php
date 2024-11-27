@@ -38,7 +38,7 @@ class App{
         if(!isset($_SERVER['REQUEST_URI']))
             return false;
         $path = $_SERVER['REQUEST_URI'];
-        $baseDir = dirname($_SERVER['SCRIPT_NAME']);
+        $baseDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
         $route = str_replace($baseDir, "", $path);
         $parts = explode("/", $route );
         $action = "";
