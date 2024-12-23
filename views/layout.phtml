@@ -149,7 +149,9 @@
                <div class="menu">
                  <ul>
                      <li><a href="[@baseUrl]">Home</a></li>
-                     <li><a href="[@baseUrl]/add/">Submit News</a></li>
+                     <?php if (isset($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin'): ?>
+                         <li><a href="[@baseUrl]/add/">Submit News</a></li>
+                     <?php endif; ?>
                      <li class="last"><a href="[@baseUrl]/logout">Logout</a></li>
                    </ul> 
                </div>
