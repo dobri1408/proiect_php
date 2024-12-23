@@ -7,21 +7,29 @@ class DB {
     
     public function __construct()
     {
-        $this->_CONFIG = parse_ini_file(APPLICATION_PATH . DS. "conf". DS . "application.ini.php", TRUE);
+        $this->_CONFIG = parse_ini_file(APPLICATION_PATH . DS . "conf" . DS . "application.ini.php", TRUE);
     }
 
     public function initDb()
     {
         $config = $this->_CONFIG;
-        $this->_DB = new mysqli($config["database"]["server"], $config["database"]["username"], $config["database"]["password"], $config["database"]["db"], $config["database"]["port"]);
+
+        // Ensure port is cast to integer
+        $port = isset($config["database"]["port"]) ? (int)$config["database"]["port"] : 3306;
+
+        $this->_DB = new mysqli(
+            $config["database"]["server"], 
+            $config["database"]["username"], 
+            $config["database"]["password"], 
+            $config["database"]["db"], 
+            $port
+        );
+
         if ($this->_DB->connect_errno) {
             throw new Exception("Failed to connect to MySQL: (" . $this->_DB->connect_errno . ") " . $this->_DB->connect_error);
         }
     }
     
-    /*
-    Execute a MySQL query and return the result
-    */
     public function executeQuery($query)
     {
         if (!$this->_DB) {
@@ -36,18 +44,12 @@ class DB {
         
         return $result;
     }
-    
-    /*
-    Get last inserted ID
-    */
+
     public function getLastInsertedNewsId()
     {
         return $this->_DB->insert_id;
     }
 
-    /*
-    Save news to database
-    */
     public function saveNews($news_id = 0)
     {
         $title = App::test_input($_POST["title"]);
@@ -83,10 +85,7 @@ class DB {
         
         return $news_id ?: $this->getLastInsertedNewsId();
     }
-    
-    /*
-    Get news using the filter $search
-    */
+
     public function getNewsByQuery($search = "")
     {
         $query = "SELECT * FROM posts";
@@ -95,7 +94,6 @@ class DB {
         }
         $query .= " ORDER BY created DESC";
         
-        error_log("Executing query: " . $query);
         $result = $this->executeQuery($query);
         
         $array = [];
@@ -106,18 +104,12 @@ class DB {
         return $array;
     }
 
-    /*
-    Delete news post by id
-    */
     public function deleteNews($news_id)
     {
         $query = "DELETE FROM posts WHERE id = $news_id";
         $this->executeQuery($query); 
     }
-    
-    /*
-    Load news post by id
-    */
+
     public function loadNews($news_id)
     {
         $query = "SELECT * FROM posts WHERE id = $news_id";
@@ -125,10 +117,7 @@ class DB {
 
         return $result->fetch_assoc();
     }
-    
-    /*
-    Get news by permalink
-    */
+
     public function getNewsByPermalink($permalink)
     {
         $permalink = str_replace(".html", "", $permalink);
@@ -139,23 +128,41 @@ class DB {
 
         return $result->fetch_assoc();
     }
-    
-    /*
-    Sterilize input for permalink
-    */
+
+    public function checkUserExists($username, $email)
+    {
+        if (!$this->_DB) {
+            $this->initDb();
+        }
+
+        $query = "SELECT COUNT(*) as count FROM users WHERE username = ? OR email = ?";
+        $stmt = $this->_DB->prepare($query);
+
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $this->_DB->error);
+        }
+
+        $stmt->bind_param("ss", $username, $email);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $data['count'] > 0;
+    }
+
     private function sterilize($title)
     {
         $result = strtolower($title);
-        $result = preg_replace('/\W/', ' ', $result); // Strip non-word characters
-        $result = preg_replace('/\s+/', '-', $result); // Replace spaces with dashes
-        $result = trim($result, '-'); // Trim dashes
+        $result = preg_replace('/\W/', ' ', $result);
+        $result = preg_replace('/\s+/', '-', $result);
+        $result = trim($result, '-');
 
         return $result;
     }
-    
-    /*
-    Validate permalink uniqueness
-    */
+
     private function validatePermalink($permalink, $news_id = 0)
     {
         $query = "SELECT COUNT(*) FROM posts WHERE permalink = '$permalink' AND id != $news_id";

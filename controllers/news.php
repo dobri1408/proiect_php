@@ -126,8 +126,12 @@ class appController {
             $username = App::test_input($_POST['username']);
             $password = App::test_input($_POST['password']);
 
-            if ($username === 'admin' && $password === 'admin') {
+            $db = new DB();
+            $user = $db->getUserByUsername($username);
+
+            if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['logged_in'] = true;
+                $_SESSION['username'] = $username;
                 appTemplate::redirect(appTemplate::getBaseUrl());
             } else {
                 $error = "Invalid username or password!";
@@ -138,6 +142,35 @@ class appController {
         $view->set("error", $error);
 
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Login"));
+    }
+
+    public static function registerAction($args = array())
+    {
+        $error = "";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = App::test_input($_POST['username']);
+            $email = App::test_input($_POST['email']);
+            $password = App::test_input($_POST['password']);
+            $confirm_password = App::test_input($_POST['confirm_password']);
+
+            if ($password !== $confirm_password) {
+                $error = "Passwords do not match!";
+            } else {
+                $db = new DB();
+                $user_exists = $db->checkUserExists($username, $email);
+                if ($user_exists) {
+                    $error = "Username or Email already exists!";
+                } else {
+                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT));
+                    appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+                }
+            }
+        }
+
+        $view = new appTemplate("register.phtml");
+        $view->set("error", $error);
+
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
     }
     
     public static function logoutAction($args = array())
