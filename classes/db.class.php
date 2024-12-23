@@ -202,7 +202,7 @@ public function registerUser($username, $email, $password,$type)
         throw new Exception("Prepare failed: " . $this->_DB->error);
     }
 
-    $stmt->bind_param("sss", $username, $email, $password,$type);
+    $stmt->bind_param("ssss", $username, $email, $password,$type);
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
