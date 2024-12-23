@@ -129,7 +129,7 @@ class appController {
             $db = new DB();
             $user = $db->getUserByUsername($username);
 
-            if (true==true) {
+            if ($user ) {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['username'] = $username;
                 $error = "wrf";
