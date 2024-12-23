@@ -145,7 +145,7 @@ class appController {
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Login"));
     }
 
-    public static function registerAction($args = array())
+    public static function registerEditorAction($args = array())
     {
         $error = "";
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -162,7 +162,36 @@ class appController {
                 if ($user_exists) {
                     $error = "Username or Email already exists!";
                 } else {
-                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT));
+                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT),"editor");
+                    appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+                }
+            }
+        }
+
+        $view = new appTemplate("register.phtml");
+        $view->set("error", $error);
+
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
+    }
+
+    public static function registerAdminAction($args = array())
+    {
+        $error = "";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = App::test_input($_POST['username']);
+            $email = App::test_input($_POST['email']);
+            $password = App::test_input($_POST['password']);
+            $confirm_password = App::test_input($_POST['confirm_password']);
+
+            if ($password !== $confirm_password) {
+                $error = "Passwords do not match!";
+            } else {
+                $db = new DB();
+                $user_exists = $db->checkUserExists($username, $email);
+                if ($user_exists) {
+                    $error = "Username or Email already exists!";
+                } else {
+                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT),"admin");
                     appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
                 }
             }

@@ -187,7 +187,7 @@ class DB {
 
     return $data['count'] > 0;
 }
-public function registerUser($username, $email, $password)
+public function registerUser($username, $email, $password,$type)
 {
     if (!$this->_DB) {
         $this->initDb();
@@ -195,14 +195,14 @@ public function registerUser($username, $email, $password)
 
     // Hash the password using password_hash
 
-    $query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
+    $query = "INSERT INTO users (username, email, password_hash, type_account) VALUES (?, ?, ?,?)";
     $stmt = $this->_DB->prepare($query);
 
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $this->_DB->error);
     }
 
-    $stmt->bind_param("sss", $username, $email, $password);
+    $stmt->bind_param("sss", $username, $email, $password,$type);
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
