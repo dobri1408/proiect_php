@@ -168,7 +168,7 @@ class appController {
             }
         }
 
-        $view = new appTemplate("register.phtml");
+        $view = new appTemplate("register_editor.phtml");
         $view->set("error", $error);
 
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
@@ -197,7 +197,7 @@ class appController {
             }
         }
 
-        $view = new appTemplate("register.phtml");
+        $view = new appTemplate("register_admin.phtml");
         $view->set("error", $error);
 
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
