@@ -162,11 +162,14 @@ class DB {
 
     return $data['count'] > 0;
 }
-public function registerUser($username, $email, $hashedPassword)
+public function registerUser($username, $email, $password)
 {
     if (!$this->_DB) {
         $this->initDb();
     }
+
+    // Hash the password using password_hash
+    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
     $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     $stmt = $this->_DB->prepare($query);
@@ -186,6 +189,7 @@ public function registerUser($username, $email, $hashedPassword)
 
     return true;
 }
+
 
 
     /*
