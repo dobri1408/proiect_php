@@ -162,6 +162,31 @@ class DB {
 
     return $data['count'] > 0;
 }
+public function registerUser($username, $email, $hashedPassword)
+{
+    if (!$this->_DB) {
+        $this->initDb();
+    }
+
+    $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+    $stmt = $this->_DB->prepare($query);
+
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $this->_DB->error);
+    }
+
+    $stmt->bind_param("sss", $username, $email, $hashedPassword);
+    $stmt->execute();
+
+    if ($stmt->affected_rows === 0) {
+        throw new Exception("User registration failed.");
+    }
+
+    $stmt->close();
+
+    return true;
+}
+
 
     /*
     Sterilize input for permalink
