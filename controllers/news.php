@@ -132,6 +132,7 @@ class appController {
             if ($user && password_verify($password, $user['password_hash'])) {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['username'] = $username;
+                $error = "wrf";
                 appTemplate::redirect(appTemplate::getBaseUrl());
             } else {
                 $error = "Invalid username or password!";
