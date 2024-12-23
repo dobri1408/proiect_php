@@ -36,6 +36,31 @@ class DB {
         
         return $result;
     }
+    public function getUserByUsername($username)
+    {
+        if (!$this->_DB) {
+            $this->initDb();
+        }
+
+        $query = "SELECT * FROM users WHERE username = ?";
+        $stmt = $this->_DB->prepare($query);
+
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $this->_DB->error);
+        }
+
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $user;
+    }
+
+    // 
     
     /*
     Get last inserted ID
