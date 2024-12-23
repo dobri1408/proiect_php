@@ -194,7 +194,6 @@ public function registerUser($username, $email, $password)
     }
 
     // Hash the password using password_hash
-    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
     $query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
     $stmt = $this->_DB->prepare($query);
@@ -203,7 +202,7 @@ public function registerUser($username, $email, $password)
         throw new Exception("Prepare failed: " . $this->_DB->error);
     }
 
-    $stmt->bind_param("sss", $username, $email, $hashedPassword);
+    $stmt->bind_param("sss", $username, $email, $password);
     $stmt->execute();
 
     if ($stmt->affected_rows === 0) {
