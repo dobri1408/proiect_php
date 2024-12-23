@@ -171,7 +171,7 @@ public function registerUser($username, $email, $password)
     // Hash the password using password_hash
     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-    $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+    $query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
     $stmt = $this->_DB->prepare($query);
 
     if (!$stmt) {
