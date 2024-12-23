@@ -129,7 +129,7 @@ class appController {
             $db = new DB();
             $user = $db->getUserByUsername($username);
 
-            if ($user && password_verify($password, $user['password'])) {
+            if ($user && password_verify($password, $user['password_hash'])) {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['username'] = $username;
                 appTemplate::redirect(appTemplate::getBaseUrl());
