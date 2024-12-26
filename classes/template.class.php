@@ -48,11 +48,27 @@ class appTemplate {
         $this->values[$key] = $value;
     }
 
+    public static function refreshSessionState()
+    {
+        // Update session-dependent state dynamically
+        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
+            $_SESSION['admin_menu'] = '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
+        } else {
+            $_SESSION['admin_menu'] = '';
+        }
+    }
+
+    public static function clearSessionState()
+    {
+        // Reset session-dependent variables
+        unset($_SESSION['admin_menu']);
+    }
+
     /*
     Outputs the content of the template, replacing the keys for its respective values.
     */
-    public function output() {
-
+    public function output()
+    {
         if (!file_exists($this->file)) {
             return "Error loading template file ($this->file).<br />";
         }
@@ -63,12 +79,13 @@ class appTemplate {
             $output = str_replace($tagToReplace, $value, $output);
         }
 
-        // Dynamically inject admin menu based on session
-        $output = str_replace("[@admin_menu]", $this->getAdminMenu(), $output);
+        // Inject admin menu dynamically
+        $adminMenu = $_SESSION['admin_menu'] ?? '';
+        $output = str_replace("[@admin_menu]", $adminMenu, $output);
 
         return $output;
     }
-
+    
     /*
     Merges the content from an array of templates and separates it with $separator.
     */
@@ -125,7 +142,7 @@ class appTemplate {
     private function getAdminMenu()
     {
         // Check for admin rights dynamically
-        if (true==true) {
+        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin' && !empty($_SESSION['logged_in']) && $_SESSION['logged_in']) {
             return '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
         }
         return '';
