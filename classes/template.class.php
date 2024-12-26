@@ -111,9 +111,17 @@ class appTemplate {
             }
         }
                 
+        $this->set("admin_menu", $this->getAdminMenu());
         $layout->init();
         
         return preg_replace("/\[@(.*)\]/", "", $layout->output());
+    }
+    private function getAdminMenu()
+    {
+        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
+            return '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
+        }
+        return '';
     }
     
 }
