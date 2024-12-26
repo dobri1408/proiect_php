@@ -21,7 +21,7 @@ class appController {
                 $view->set("news_id", $post["id"]);
                 $view->set("permalink", $post["permalink"]);
                 $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
-                $view->set("adminconsole",$this->getAdminConsole());
+                $view->set("adminconsole",$view->getAdminConsole());
                 $list_output .= $view->output();
             }
         }
