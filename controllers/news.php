@@ -150,6 +150,7 @@ class appController {
         $error = "";
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = App::test_input($_POST['username']);
+            
             $email = App::test_input($_POST['email']);
             $password = App::test_input($_POST['password']);
             $confirm_password = App::test_input($_POST['confirm_password']);
