@@ -14,6 +14,12 @@ class appTemplate {
         $this->set("baseUrl", $baseUrl);
     }
     
+    public static function redirect($url)
+{
+    header("Location: $url");
+    exit;
+}
+
     public static function getBaseUrl() {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'];

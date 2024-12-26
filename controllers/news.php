@@ -64,9 +64,11 @@ class appController {
         appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
     }
 
-    private static function checkAuthentication() {
-        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-            appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
-        }
+    private static function checkAuthentication()
+{
+    if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+        appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
     }
+}
+
 }
