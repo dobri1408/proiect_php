@@ -36,6 +36,32 @@ class appController {
 
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Homepage", "query" => stripslashes($query)));
     }
+    public static function viewNewsAction($args = array())
+    {
+        self::checkAuthentication();
+        $db = new DB();
+        $news_id = $args[0];
+        
+        if (!is_numeric($news_id)) {
+            $post = $db->getNewsByPermalink($news_id);
+        } else {
+            $post = $db->loadNews($news_id);
+        }
+        
+        if (!$post) {
+            appTemplate::redirect(appTemplate::getBaseUrl());
+        }
+        
+        $view = new appTemplate("news/view.phtml");
+        $view->set("title", $post["title"]);
+        $view->set("author", $post["author"]);
+        $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
+        $view->set("content", htmlspecialchars_decode($post["content"]));
+        $view->set("news_id", $post["id"]);
+        
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => $post["title"]));
+    }
+    
 
     public static function loginAction($args = array()) {
         $error = "";
