@@ -23,6 +23,7 @@ class appTemplate {
     {
         $baseUrl = appTemplate::getBaseUrl();
         $this->set("baseUrl", $baseUrl);
+        $this->set("admin_menu", $this->getAdminMenu());
     }
     
     public static function getBaseUrl()
@@ -62,7 +63,7 @@ class appTemplate {
             $tagToReplace = "[@$key]";
             $output = str_replace($tagToReplace, $value, $output);
         }
-                        
+
         return $output;
     }
 
@@ -86,7 +87,7 @@ class appTemplate {
     /*
     Redirect the page to $url
     */
-    public static function redirect ($url)
+    public static function redirect($url)
     {
         header("Location: $url");
         exit;
@@ -110,18 +111,21 @@ class appTemplate {
                 $layout->set($key, $value);
             }
         }
-                
-        $layout->set("admin_menu", $layout->getAdminMenu());
+
         $layout->init();
-        
+
         return preg_replace("/\[@(.*)\]/", "", $layout->output());
     }
+
+    /*
+    Determines if the user is an admin and returns the admin menu HTML
+    */
     private function getAdminMenu()
     {
+        // Refresh the session or fetch `type_account` dynamically if needed
         if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
             return '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
         }
         return '';
     }
-    
 }
