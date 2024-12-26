@@ -64,8 +64,7 @@ class appTemplate {
         }
 
         // Dynamically inject admin menu based on session
-        $adminMenu = $this->getAdminMenu();
-        $output = str_replace("[@admin_menu]", $adminMenu, $output);
+        $output = str_replace("[@admin_menu]", $this->getAdminMenu(), $output);
 
         return $output;
     }
@@ -125,7 +124,8 @@ class appTemplate {
     */
     private function getAdminMenu()
     {
-        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
+        // Check for admin rights dynamically
+        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin' && !empty($_SESSION['logged_in']) && $_SESSION['logged_in']) {
             return '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
         }
         return '';
