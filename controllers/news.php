@@ -58,6 +58,8 @@ class appController {
         $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
         $view->set("content", htmlspecialchars_decode($post["content"]));
         $view->set("news_id", $post["id"]);
+        $adminConsole = self::getAdminConsole($post["id"]);
+        $view->set("adminconsole", $adminConsole);
         
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => $post["title"]));
     }
