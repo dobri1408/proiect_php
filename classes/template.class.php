@@ -23,7 +23,6 @@ class appTemplate {
     {
         $baseUrl = appTemplate::getBaseUrl();
         $this->set("baseUrl", $baseUrl);
-        $this->set("admin_menu", $this->getAdminMenu());
     }
     
     public static function getBaseUrl()
@@ -63,6 +62,10 @@ class appTemplate {
             $tagToReplace = "[@$key]";
             $output = str_replace($tagToReplace, $value, $output);
         }
+
+        // Dynamically inject admin menu based on session
+        $adminMenu = $this->getAdminMenu();
+        $output = str_replace("[@admin_menu]", $adminMenu, $output);
 
         return $output;
     }
@@ -122,7 +125,6 @@ class appTemplate {
     */
     private function getAdminMenu()
     {
-        // Refresh the session or fetch `type_account` dynamically if needed
         if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
             return '<li><a href="[@baseUrl]/add/">Submit News</a></li>';
         }
