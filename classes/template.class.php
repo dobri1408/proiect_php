@@ -111,7 +111,7 @@ class appTemplate {
             }
         }
                 
-        $layout->set("admin_menu", layout->getAdminMenu());
+        $layout->set("admin_menu", $layout->getAdminMenu());
         $layout->init();
         
         return preg_replace("/\[@(.*)\]/", "", $layout->output());
