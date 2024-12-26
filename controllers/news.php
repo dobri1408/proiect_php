@@ -21,7 +21,11 @@ class appController {
                 $view->set("news_id", $post["id"]);
                 $view->set("permalink", $post["permalink"]);
                 $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
-                $view->set("adminconsole",$view->getAdminConsole());
+
+                // Dynamically set the admin console links based on the session
+                $adminConsole = self::getAdminConsole($post["id"]);
+                $view->set("adminconsole", $adminConsole);
+
                 $list_output .= $view->output();
             }
         }
@@ -65,18 +69,17 @@ class appController {
         appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
     }
 
-    private static function checkAuthentication()
-{
-    if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-        appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+    private static function checkAuthentication() {
+        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+            appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+        }
     }
-}
-private function getAdminConsole()
-    {
+
+    private static function getAdminConsole($newsId) {
         if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
-            return '<a href="[@baseUrl]/edit/[@news_id]">Edit</a> | <a href="[@baseUrl]/delete/[@news_id]">Delete</a>';
+            $baseUrl = appTemplate::getBaseUrl();
+            return '<a href="' . $baseUrl . '/edit/' . $newsId . '">Edit</a> | <a href="' . $baseUrl . '/delete/' . $newsId . '">Delete</a>';
         }
         return '';
     }
-
 }
