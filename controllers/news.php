@@ -102,6 +102,111 @@ class appController {
             appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
         }
     }
+    public static function searchNewsAction($args = array())
+    {
+        self::checkAuthentication();
+        $query = $_GET["query"];
+        return appController::indexAction(array($query));
+    }
+    
+    public static function addNewsAction($args = array(), $update_news = 0)
+    {
+        self::checkAuthentication();
+        $db = new DB();
+        $news = array("title" => "", "author" => "", "date" => "", "time" => "", "content" => "", "updated" => "", "id" => "");
+        $news_id = 0;
+        
+        if ($args && $args[0]) {
+            $news_id = (int) $args[0];
+            $news = $db->loadNews($news_id);  
+            if (!$news) {
+                appTemplate::redirect(appTemplate::getBaseUrl());
+            }
+            $news["date"] = date("Y-m-d", strtotime($news["created"]));
+            $news["time"] = date("H:i", strtotime($news["created"]));
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] == "POST") {
+            $news_id = $db->saveNews($news_id);
+            appTemplate::redirect(appTemplate::getBaseUrl());
+        }
+        
+        $view = new appTemplate("news/add.phtml");
+        $view->set("pageTitle", $news_id ? "Edit News #" . $news['id'] : "Add News");
+        $view->set("news_id", $news['id']);
+        $view->set("input_title", $news['title']);
+        $view->set("input_author", $news['author']);
+        $view->set("input_date", $news['date']);
+        $view->set("input_time", $news['time']);
+        $view->set("input_content", $news['content']);
+        
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => $news_id ? "Edit News" : "Add News"));
+    }
+    
+    public static function updateNewsAction($args = array())
+    {
+        self::checkAuthentication();
+        return appController::addNewsAction($args, 1);
+    }
+
+    public static function registerEditorAction($args = array())
+    {
+        $error = "";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = App::test_input($_POST['username']);
+            $email = App::test_input($_POST['email']);
+            $password = App::test_input($_POST['password']);
+            $confirm_password = App::test_input($_POST['confirm_password']);
+
+            if ($password !== $confirm_password) {
+                $error = "Passwords do not match!";
+            } else {
+                $db = new DB();
+                $user_exists = $db->checkUserExists($username, $email);
+                if ($user_exists) {
+                    $error = "Username or Email already exists!";
+                } else {
+                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT),"editor");
+                    appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+                }
+            }
+        }
+
+        $view = new appTemplate("register_editor.phtml");
+        $view->set("error", $error);
+
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
+    }
+
+    public static function registerAdminAction($args = array())
+    {
+        $error = "";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = App::test_input($_POST['username']);
+            $email = App::test_input($_POST['email']);
+            $password = App::test_input($_POST['password']);
+            $confirm_password = App::test_input($_POST['confirm_password']);
+
+            if ($password !== $confirm_password) {
+                $error = "Passwords do not match!";
+            } else {
+                $db = new DB();
+                $user_exists = $db->checkUserExists($username, $email);
+                if ($user_exists) {
+                    $error = "Username or Email already exists!";
+                } else {
+                    $db->registerUser($username, $email, password_hash($password, PASSWORD_BCRYPT),"admin");
+                    appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
+                }
+            }
+        }
+
+        $view = new appTemplate("register_admin.phtml");
+        $view->set("error", $error);
+
+        return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Register"));
+    }
+    
 
     private static function getAdminConsole($newsId) {
         if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
