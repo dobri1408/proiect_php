@@ -21,6 +21,7 @@ class appController {
                 $view->set("news_id", $post["id"]);
                 $view->set("permalink", $post["permalink"]);
                 $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
+                $view->set("adminconsole",$this->getAdminConsole());
                 $list_output .= $view->output();
             }
         }
@@ -70,5 +71,12 @@ class appController {
         appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
     }
 }
+private function getAdminConsole()
+    {
+        if (!empty($_SESSION['type_account']) && $_SESSION['type_account'] === 'admin') {
+            return '<a href="[@baseUrl]/edit/[@news_id]">Edit</a> | <a href="[@baseUrl]/delete/[@news_id]">Delete</a>';
+        }
+        return '';
+    }
 
 }
