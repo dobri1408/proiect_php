@@ -3,3 +3,43 @@
 [@content]
 </ul>
 <a href="/export-news" class="btn btn-primary">Exportă știrile ca CSV</a>   
+
+<canvas id="newsChart" width="400" height="200"></canvas>
+
+<script>
+    async function fetchNewsStatistics() {
+        const response = await fetch('/get-news-statistics');
+        return response.json();
+    }
+
+    async function renderChart() {
+        const statistics = await fetchNewsStatistics();
+
+        const labels = Object.keys(statistics);
+        const data = Object.values(statistics);
+
+        const ctx = document.getElementById('newsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Știri publicate pe zi',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    renderChart();
+</script>

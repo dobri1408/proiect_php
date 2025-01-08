@@ -118,6 +118,42 @@ class appController {
     
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Homepage", "query" => stripslashes($query)));
     }
+    public static function getNewsStatistics() {
+        self::checkAuthentication();
+    
+        $db = new DB();
+        $internalNews = $db->getNewsByQuery(""); // Toate știrile interne
+        $externalNews = self::fetchExternalNews(); // Știrile externe
+    
+        $statistics = [];
+    
+        // Procesare știri interne
+        foreach ($internalNews as $news) {
+            $date = date("Y-m-d", strtotime($news['created']));
+            if (!isset($statistics[$date])) {
+                $statistics[$date] = 0;
+            }
+            $statistics[$date]++;
+        }
+    
+        // Procesare știri externe
+        foreach ($externalNews as $news) {
+            $date = date("Y-m-d", strtotime($news['date']));
+            if (!isset($statistics[$date])) {
+                $statistics[$date] = 0;
+            }
+            $statistics[$date]++;
+        }
+    
+        // Sortează datele după cheie (dată)
+        ksort($statistics);
+    
+        // Trimite datele ca JSON
+        header('Content-Type: application/json');
+        echo json_encode($statistics);
+        exit;
+    }
+    
     public static function exportNewsToCSV() {
         self::checkAuthentication();
     
