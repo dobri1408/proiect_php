@@ -137,7 +137,7 @@ class appController {
         $output = fopen('php://output', 'w');
     
         // Adaugă linia de antet
-        fputcsv($output, ['ID', 'Titlu', 'Autor', 'Data', 'Conținut/Rezumat', 'Tip', 'Link']);
+        fputcsv($output, ['ID', 'Titlu', 'Autor', 'Data', 'Conținut/Rezumat', 'Tip', 'Link'], ',', '"', "\\");
     
         // Scrie știrile interne în fișierul CSV
         if (is_array($internalNews)) {
@@ -153,7 +153,7 @@ class appController {
                     $post['content'],
                     'Internă',
                     $fullPermalink
-                ]);
+                ], ',', '"', "\\");
             }
         }
     
@@ -168,7 +168,7 @@ class appController {
                     $external['summary'],
                     'Externă',
                     $external['link']
-                ]);
+                ], ',', '"', "\\");
             }
         }
     
