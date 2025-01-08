@@ -17,17 +17,22 @@ class appController {
             $xpath = new DOMXPath($dom);
     
             // Extragerea articolelor
-            $articles = $xpath->query("//div[@class='article-title']");
+            $articles = $xpath->query("//div[@class='article-content']");
             $news = [];
             foreach ($articles as $article) {
                 $title = $xpath->query(".//h2/a", $article)->item(0)->textContent ?? '';
                 $link = $xpath->query(".//h2/a/@href", $article)->item(0)->nodeValue ?? '';
                 $summary = $xpath->query(".//p", $article)->item(0)->textContent ?? '';
+                $dateRaw = $xpath->query(".//div[@class='article-date']", $article)->item(0)->textContent ?? '';
+    
+                // Procesarea datei
+                $date = self::processExternalDate(trim($dateRaw));
     
                 $news[] = [
                     'title' => trim($title),
                     'link' => trim($link),
                     'summary' => trim($summary),
+                    'date' => $date,
                 ];
             }
     
@@ -37,6 +42,19 @@ class appController {
         return [];
     }
     
+    private static function processExternalDate($dateRaw) {
+        // Transforma "acum 23 minute" sau "acum 1 ore 40 de min" într-un timestamp
+        $date = new DateTime();
+        if (preg_match('/acum (\d+) minute/', $dateRaw, $matches)) {
+            $date->modify("-{$matches[1]} minutes");
+        } elseif (preg_match('/acum (\d+) ore(?: (\d+) minute)?/', $dateRaw, $matches)) {
+            $date->modify("-{$matches[1]} hours");
+            if (isset($matches[2])) {
+                $date->modify("-{$matches[2]} minutes");
+            }
+        }
+        return $date->format("M d, Y H:i");
+    }
     public static function indexAction($args = array()) {
         self::checkAuthentication();
     
@@ -81,14 +99,14 @@ class appController {
                 // Link-ul extern corect
                 $view->set("permalink", htmlspecialchars($external['link']));
                 
-                $view->set("date", date("M d, Y H:i")); // Poți adăuga data curentă sau extrage data din sursa externă
+                // Data procesată din sursa externă
+                $view->set("date", htmlspecialchars($external['date']));
         
                 // Nu setăm adminConsole pentru știrile externe
                 $view->set("adminconsole", "");
         
                 $list_output .= $view->output();
             }
-        
         }
     
         $view = new appTemplate("news/index.phtml");
