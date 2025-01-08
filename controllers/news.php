@@ -73,7 +73,10 @@ class appController {
                 $view->set("title", htmlspecialchars($external['title']));
                 $view->set("author", "Extern");
                 $view->set("news_id", 0); // Nu avem un ID în baza de date pentru știrile externe
+        
+                // Link-ul extern corect
                 $view->set("permalink", htmlspecialchars($external['link']));
+                
                 $view->set("date", date("M d, Y H:i")); // Poți adăuga data curentă sau extrage data din sursa externă
         
                 // Nu setăm adminConsole pentru știrile externe
@@ -81,6 +84,7 @@ class appController {
         
                 $list_output .= $view->output();
             }
+        
         }
     
         $view = new appTemplate("news/index.phtml");
