@@ -1,5 +1,8 @@
 <?php
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'vendor/autoload.php'; // Include PHPMailer
 class appController {
 
     public static function fetchExternalNews() {
@@ -187,93 +190,104 @@ class appController {
         return appController::indexAction(array($query));
     }
 
-    
 
-    public static function addNewsAction($args = array(), $update_news = 0) {
-        self::checkAuthentication();
-        $db = new DB();
-        $news = array("title" => "", "author" => "", "date" => "", "time" => "", "content" => "", "updated" => "", "id" => "");
-        $news_id = 0;
-    
-        if ($args && $args[0]) {
-            $news_id = (int)$args[0];
-            $news = $db->loadNews($news_id);
-            if (!$news) {
-                appTemplate::redirect(appTemplate::getBaseUrl());
-            }
-            $news["date"] = date("Y-m-d", strtotime($news["created"]));
-            $news["time"] = date("H:i", strtotime($news["created"]));
-        }
-    
-        if ($_SERVER['REQUEST_METHOD'] == "POST") {
-            $news_id = $db->saveNews($news_id);
-    
-            // Obține emailul utilizatorului curent
-            $currentUserEmail = "dobriceanionut1408@gmail.com"; // Emailul utilizatorului (hardcodat pentru test)
-            $newsTitle = htmlspecialchars($_POST['title']); // Titlul știrii
-    
-            if (!empty($currentUserEmail)) {
-                // Obține datele din variabila de mediu MAILERTOGO_URL
-                $mailerUrl = getenv('MAILERTOGO_URL');
-                if (!$mailerUrl) {
-                    error_log("Eroare: Variabila MAILERTOGO_URL nu este configurată.");
-                    return;
-                }
-    
-                $parsedUrl = parse_url($mailerUrl);
-                $smtpHost = $parsedUrl['host'];
-                $smtpPort = $parsedUrl['port'];
-                $smtpUser = $parsedUrl['user'];
-                $smtpPass = $parsedUrl['pass'];
-    
-                // Log pentru debugging
-                error_log("Conectare la SMTP: Host=$smtpHost, Port=$smtpPort, User=$smtpUser");
-    
-                // Construiește antetul emailului
-                $headers = "From: no-reply@platforma.com\r\n";
-                $headers .= "To: $currentUserEmail\r\n";
-                $headers .= "Subject: Știrea ta a fost postată cu succes!\r\n";
-                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    
-                $message = "Salut,\n\nȘtirea ta intitulată \"" . $newsTitle . "\" a fost postată cu succes pe platformă.\n\nMulțumim că ai contribuit!\n\nEchipa";
-    
-                // Trimite emailul folosind Mailer To Go
-                $socket = fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
-                if (!$socket) {
-                    error_log("Eroare la conectarea la serverul SMTP: $errstr ($errno)");
-                } else {
-                    fwrite($socket, "EHLO $smtpHost\r\n");
-                    fwrite($socket, "AUTH LOGIN\r\n");
-                    fwrite($socket, base64_encode($smtpUser) . "\r\n");
-                    fwrite($socket, base64_encode($smtpPass) . "\r\n");
-                    fwrite($socket, "MAIL FROM: <no-reply@platforma.com>\r\n");
-                    fwrite($socket, "RCPT TO: <$currentUserEmail>\r\n");
-                    fwrite($socket, "DATA\r\n");
-                    fwrite($socket, "$headers\r\n$message\r\n.\r\n");
-                    fwrite($socket, "QUIT\r\n");
-    
-                    $response = stream_get_contents($socket);
-                    fclose($socket);
-    
-                    error_log("Răspuns SMTP: $response");
-                }
-            }
-    
+
+
+public static function sendEmail($to, $subject, $body) {
+    $mailerUrl = getenv('MAILERTOGO_URL');
+    if (!$mailerUrl) {
+        error_log("Eroare: Variabila MAILERTOGO_URL nu este configurată.");
+        return false;
+    }
+
+    // Parsează URL-ul MailerToGo
+    $parsedUrl = parse_url($mailerUrl);
+    $smtpHost = $parsedUrl['host'];
+    $smtpPort = $parsedUrl['port'];
+    $smtpUser = $parsedUrl['user'];
+    $smtpPass = $parsedUrl['pass'];
+
+    $mail = new PHPMailer(true);
+
+    try {
+        // Setări server
+        $mail->isSMTP();
+        $mail->Host       = $smtpHost;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $smtpUser;
+        $mail->Password   = $smtpPass;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Sau ENCRYPTION_SMTPS
+        $mail->Port       = $smtpPort;
+
+        // Setări expeditor și destinatar
+        $mail->setFrom('no-reply@platforma.com', 'Platforma');
+        $mail->addAddress($to);
+
+        // Conținut email
+        $mail->isHTML(false);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+
+        // Trimite emailul
+        $mail->send();
+        error_log("Email trimis cu succes către $to.");
+        return true;
+    } catch (Exception $e) {
+        error_log("Mesajul nu a putut fi trimis. Eroare Mailer: {$mail->ErrorInfo}");
+        return false;
+    }
+}
+
+public static function addNewsAction($args = array(), $update_news = 0) {
+    self::checkAuthentication();
+    $db = new DB();
+    $news = array("title" => "", "author" => "", "date" => "", "time" => "", "content" => "", "updated" => "", "id" => "");
+    $news_id = 0;
+
+    if ($args && $args[0]) {
+        $news_id = (int)$args[0];
+        $news = $db->loadNews($news_id);
+        if (!$news) {
             appTemplate::redirect(appTemplate::getBaseUrl());
         }
-    
-        $view = new appTemplate("news/add.phtml");
-        $view->set("pageTitle", $news_id ? "Edit News #" . (int)$news['id'] : "Add News");
-        $view->set("news_id", (int)$news['id']);
-        $view->set("input_title", htmlspecialchars($news['title']));
-        $view->set("input_author", htmlspecialchars($news['author']));
-        $view->set("input_date", htmlspecialchars($news['date']));
-        $view->set("input_time", htmlspecialchars($news['time']));
-        $view->set("input_content", htmlspecialchars($news['content']));
-    
-        return appTemplate::loadLayout(array("content" => $view->output(), "title" => $news_id ? "Edit News" : "Add News"));
+        $news["date"] = date("Y-m-d", strtotime($news["created"]));
+        $news["time"] = date("H:i", strtotime($news["created"]));
     }
-    
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+        $news_id = $db->saveNews($news_id);
+
+        // Obține emailul utilizatorului curent
+        $currentUserEmail = "dobriceanionut1408@gmail.com"; // Emailul utilizatorului
+        $newsTitle = htmlspecialchars($_POST['title']); // Titlul știrii
+
+        if (!empty($currentUserEmail)) {
+            $subject = "Știrea ta a fost postată cu succes!";
+            $body = "Salut,\n\nȘtirea ta intitulată \"" . $newsTitle . "\" a fost postată cu succes pe platformă.\n\nMulțumim că ai contribuit!\n\nEchipa";
+
+            // Trimite emailul
+            $emailSent = self::sendEmail($currentUserEmail, $subject, $body);
+
+            if (!$emailSent) {
+                error_log("Eroare: Emailul către $currentUserEmail nu a fost trimis.");
+            }
+        }
+
+        appTemplate::redirect(appTemplate::getBaseUrl());
+    }
+
+    $view = new appTemplate("news/add.phtml");
+    $view->set("pageTitle", $news_id ? "Edit News #" . (int)$news['id'] : "Add News");
+    $view->set("news_id", (int)$news['id']);
+    $view->set("input_title", htmlspecialchars($news['title']));
+    $view->set("input_author", htmlspecialchars($news['author']));
+    $view->set("input_date", htmlspecialchars($news['date']));
+    $view->set("input_time", htmlspecialchars($news['time']));
+    $view->set("input_content", htmlspecialchars($news['content']));
+
+    return appTemplate::loadLayout(array("content" => $view->output(), "title" => $news_id ? "Edit News" : "Add News"));
+}
+
     
     
     
