@@ -52,20 +52,24 @@ class appController {
                 if (!$post["permalink"]) {
                     $post["permalink"] = $post["id"];
                 }
+                
+                // Construirea URL-ului complet pentru știrile interne
+                $baseUrl = appTemplate::getBaseUrl();
+                $fullPermalink = $baseUrl . '/view/' . htmlspecialchars($post["permalink"]);
+                
                 $view = new appTemplate("news/news-list.phtml");
                 $view->set("title", htmlspecialchars($post["title"]));
                 $view->set("author", htmlspecialchars($post["author"]));
                 $view->set("news_id", (int)$post["id"]);
-                $view->set("permalink", htmlspecialchars($post["permalink"]));
+                $view->set("permalink", $fullPermalink); // Setarea link-ului complet
                 $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
-    
+        
                 $adminConsole = self::getAdminConsole($post["id"]);
                 $view->set("adminconsole", $adminConsole);
-    
+        
                 $list_output .= $view->output();
             }
         }
-    
         // Adăugarea știrilor externe
         if (!empty($externalNews)) {
             foreach ($externalNews as $external) {
