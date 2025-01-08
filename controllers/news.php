@@ -158,6 +158,7 @@ class appController {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['username'] = htmlspecialchars($username);
                 $_SESSION['type_account'] = htmlspecialchars($user['type_account']);
+                $_SESSION['email'] = htmlspecialchars($user['email']);
 
                 appTemplate::refreshSessionState();
                 appTemplate::redirect(appTemplate::getBaseUrl());
