@@ -215,20 +215,25 @@ class appController {
             if (!empty($currentUserEmail)) {
                 // Obține datele din variabila de mediu MAILERTOGO_URL
                 $mailerUrl = getenv('MAILERTOGO_URL');
-                $parsedUrl = parse_url($mailerUrl);
+                if (!$mailerUrl) {
+                    error_log("Eroare: Variabila MAILERTOGO_URL nu este configurată.");
+                    return;
+                }
     
+                $parsedUrl = parse_url($mailerUrl);
                 $smtpHost = $parsedUrl['host'];
                 $smtpPort = $parsedUrl['port'];
                 $smtpUser = $parsedUrl['user'];
                 $smtpPass = $parsedUrl['pass'];
     
+                // Log pentru debugging
+                error_log("Conectare la SMTP: Host=$smtpHost, Port=$smtpPort, User=$smtpUser");
+    
                 // Construiește antetul emailului
-                $headers = [
-                    "From: no-reply@platforma.com",
-                    "To: $currentUserEmail",
-                    "Subject: Știrea ta a fost postată cu succes!",
-                    "Content-Type: text/plain; charset=UTF-8",
-                ];
+                $headers = "From: no-reply@platforma.com\r\n";
+                $headers .= "To: $currentUserEmail\r\n";
+                $headers .= "Subject: Știrea ta a fost postată cu succes!\r\n";
+                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     
                 $message = "Salut,\n\nȘtirea ta intitulată \"" . $newsTitle . "\" a fost postată cu succes pe platformă.\n\nMulțumim că ai contribuit!\n\nEchipa";
     
@@ -244,10 +249,13 @@ class appController {
                     fwrite($socket, "MAIL FROM: <no-reply@platforma.com>\r\n");
                     fwrite($socket, "RCPT TO: <$currentUserEmail>\r\n");
                     fwrite($socket, "DATA\r\n");
-                    fwrite($socket, implode("\r\n", $headers) . "\r\n\r\n$message\r\n.\r\n");
+                    fwrite($socket, "$headers\r\n$message\r\n.\r\n");
                     fwrite($socket, "QUIT\r\n");
     
+                    $response = stream_get_contents($socket);
                     fclose($socket);
+    
+                    error_log("Răspuns SMTP: $response");
                 }
             }
     
@@ -265,6 +273,7 @@ class appController {
     
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => $news_id ? "Edit News" : "Add News"));
     }
+    
     
     
     
