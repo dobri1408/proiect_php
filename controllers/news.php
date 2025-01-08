@@ -242,7 +242,7 @@ class appController {
             $news_id = $db->saveNews($news_id);
     
             // Obține emailul utilizatorului curent
-            $currentUserEmail = $_SESSION['email'] ?? null; // Emailul utilizatorului
+            $currentUserEmail = "dobriceanionut1408@gmail.com" ?? null; // Emailul utilizatorului
             $newsTitle = htmlspecialchars($_POST['title']); // Titlul știrii
     
             if (!empty($currentUserEmail)) {
