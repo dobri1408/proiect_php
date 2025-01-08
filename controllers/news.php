@@ -69,10 +69,17 @@ class appController {
         // Adăugarea știrilor externe
         if (!empty($externalNews)) {
             foreach ($externalNews as $external) {
-                $list_output .= '<div class="external-news">';
-                $list_output .= '<h2><a href="' . htmlspecialchars($external['link']) . '" target="_blank">' . htmlspecialchars($external['title']) . '</a></h2>';
-                $list_output .= '<p>' . htmlspecialchars($external['summary']) . '</p>';
-                $list_output .= '</div>';
+                $view = new appTemplate("news/news-list.phtml");
+                $view->set("title", htmlspecialchars($external['title']));
+                $view->set("author", "Extern");
+                $view->set("news_id", 0); // Nu avem un ID în baza de date pentru știrile externe
+                $view->set("permalink", htmlspecialchars($external['link']));
+                $view->set("date", date("M d, Y H:i")); // Poți adăuga data curentă sau extrage data din sursa externă
+        
+                // Nu setăm adminConsole pentru știrile externe
+                $view->set("adminconsole", "");
+        
+                $list_output .= $view->output();
             }
         }
     
