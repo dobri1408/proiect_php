@@ -118,6 +118,60 @@ class appController {
     
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Homepage", "query" => stripslashes($query)));
     }
+    public static function exportNewsToCSV() {
+        self::checkAuthentication();
+    
+        $db = new DB();
+        $internalNews = $db->getAllNews(); // Toate știrile interne
+        $externalNews = self::fetchExternalNews(); // Toate știrile externe
+    
+        // Numele fișierului CSV
+        $filename = "news_export_" . date("Y-m-d_H-i-s") . ".csv";
+    
+        // Setează antetul pentru descărcarea fișierului
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+    
+        // Creează un flux de ieșire
+        $output = fopen('php://output', 'w');
+    
+        // Adaugă linia de antet
+        fputcsv($output, ['ID', 'Titlu', 'Autor', 'Data', 'Conținut/Rezumat', 'Tip', 'Link']);
+    
+        // Scrie știrile interne în fișierul CSV
+        if (is_array($internalNews)) {
+            foreach ($internalNews as $post) {
+                fputcsv($output, [
+                    $post['id'],
+                    $post['title'],
+                    $post['author'],
+                    date("Y-m-d H:i", strtotime($post['created'])),
+                    $post['content'],
+                    'Internă',
+                    appTemplate::getBaseUrl() . '/view/' . $post['permalink']
+                ]);
+            }
+        }
+    
+        // Scrie știrile externe în fișierul CSV
+        if (is_array($externalNews)) {
+            foreach ($externalNews as $external) {
+                fputcsv($output, [
+                    'N/A', // ID-ul nu este disponibil pentru știrile externe
+                    $external['title'],
+                    'Extern',
+                    $external['date'],
+                    $external['summary'],
+                    'Externă',
+                    $external['link']
+                ]);
+            }
+        }
+    
+        fclose($output);
+        exit; // Asigură-te că scriptul se oprește aici pentru a preveni afișarea altui conținut
+    }
+    
 
     public static function viewNewsAction($args = array()) {
         self::checkAuthentication();
