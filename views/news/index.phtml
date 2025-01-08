@@ -2,21 +2,40 @@
 <ul class="news-list">
 [@content]
 </ul>
+
 <a href="/export-news" class="btn btn-primary">Exportă știrile ca CSV</a>   
 
+<!-- Canvas pentru grafic -->
 <canvas id="newsChart" width="400" height="200"></canvas>
+
+<!-- Include biblioteca Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     async function fetchNewsStatistics() {
-        const response = await fetch('/get-news-statistics');
-        return response.json();
+        try {
+            const response = await fetch('/get-news-statistics');
+            if (!response.ok) {
+                throw new Error('Failed to fetch statistics');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Eroare la obținerea statisticilor:', error);
+            return {};
+        }
     }
 
     async function renderChart() {
         const statistics = await fetchNewsStatistics();
 
-        const labels = Object.keys(statistics);
-        const data = Object.values(statistics);
+        // Verificare date și generare grafic
+        if (Object.keys(statistics).length === 0) {
+            console.warn('Nu există date pentru grafic.');
+            return;
+        }
+
+        const labels = Object.keys(statistics); // Zilele
+        const data = Object.values(statistics); // Numărul de știri
 
         const ctx = document.getElementById('newsChart').getContext('2d');
         new Chart(ctx, {
@@ -32,6 +51,12 @@
                 }]
             },
             options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true
@@ -41,5 +66,6 @@
         });
     }
 
+    // Inițializează graficul la încărcarea paginii
     renderChart();
 </script>
