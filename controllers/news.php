@@ -2,37 +2,84 @@
 
 class appController {
 
+    public static function fetchExternalNews() {
+        $url = "https://stirileprotv.ro/ultimele-stiri/";
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Dacă HTTPS dă erori
+        $output = curl_exec($ch);
+        curl_close($ch);
+    
+        if ($output) {
+            $dom = new DOMDocument();
+            @$dom->loadHTML($output);
+            $xpath = new DOMXPath($dom);
+    
+            // Extragerea articolelor
+            $articles = $xpath->query("//div[@class='article-content']");
+            $news = [];
+            foreach ($articles as $article) {
+                $title = $xpath->query(".//h2/a", $article)->item(0)->textContent ?? '';
+                $link = $xpath->query(".//h2/a/@href", $article)->item(0)->nodeValue ?? '';
+                $summary = $xpath->query(".//p", $article)->item(0)->textContent ?? '';
+    
+                $news[] = [
+                    'title' => trim($title),
+                    'link' => trim($link),
+                    'summary' => trim($summary),
+                ];
+            }
+    
+            return $news;
+        }
+    
+        return [];
+    }
+    
     public static function indexAction($args = array()) {
         self::checkAuthentication();
-
+    
         $db = new DB();
         $query = isset($args[0]) ? App::test_input(strip_tags($args[0])) : "";
         $news = $db->getNewsByQuery($query);
+        $externalNews = self::fetchExternalNews(); // Știrile externe
+    
         $list_output = "";
-
+    
         if (is_array($news)) {
             foreach ($news as $post) {
                 if (!$post["permalink"]) {
                     $post["permalink"] = $post["id"];
                 }
                 $view = new appTemplate("news/news-list.phtml");
-                $view->set("title", htmlspecialchars($post["title"])); 
+                $view->set("title", htmlspecialchars($post["title"]));
                 $view->set("author", htmlspecialchars($post["author"]));
                 $view->set("news_id", (int)$post["id"]);
                 $view->set("permalink", htmlspecialchars($post["permalink"]));
                 $view->set("date", date("M d, Y H:i", strtotime($post["created"])));
-
+    
                 $adminConsole = self::getAdminConsole($post["id"]);
                 $view->set("adminconsole", $adminConsole);
-
+    
                 $list_output .= $view->output();
             }
         }
-
+    
+        // Adăugarea știrilor externe
+        if (!empty($externalNews)) {
+            foreach ($externalNews as $external) {
+                $list_output .= '<div class="external-news">';
+                $list_output .= '<h2><a href="' . htmlspecialchars($external['link']) . '" target="_blank">' . htmlspecialchars($external['title']) . '</a></h2>';
+                $list_output .= '<p>' . htmlspecialchars($external['summary']) . '</p>';
+                $list_output .= '</div>';
+            }
+        }
+    
         $view = new appTemplate("news/index.phtml");
         $view->set("title", "Latest news");
         $view->set("content", $list_output);
-
+    
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => "Homepage", "query" => stripslashes($query)));
     }
 
