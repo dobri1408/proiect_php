@@ -258,7 +258,7 @@ public static function addNewsAction($args = array(), $update_news = 0) {
         $news_id = $db->saveNews($news_id);
 
         // Obține emailul utilizatorului curent
-        $currentUserEmail = "dobriceanionut1408@gmail.com"; // Emailul utilizatorului
+        $currentUserEmail = $_SESSION['email']; // Emailul utilizatorului
         $newsTitle = htmlspecialchars($_POST['title']); // Titlul știrii
 
         if (!empty($currentUserEmail)) {
