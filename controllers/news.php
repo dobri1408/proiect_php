@@ -186,28 +186,111 @@ class appController {
         $query = htmlspecialchars(strip_tags($_GET["query"]));
         return appController::indexAction(array($query));
     }
+    public static function generateFirebaseAuthToken() {
+        // Include detaliile contului de service direct în cod
+        $serviceAccount = [
+            "private_key" => "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDARGLScUOVqkhT\nV6p+SFUlimzkcAjzMYUjfz9glj7Or1w7JXIXKkavjif216fKCzAixJLwFAHQwXWh\n9Q7WtypNuxRBfz7awLPaU+NL6Mrkj1an16UbwvbMwI3JE2gQcCBtvdzokCIhSdXc\ntQSDBGj3S4Mi/2JWF/XbvBa46LIn+S0Eo5XVwwZ0HU8d/NRuDfp1Mp68Z9rFpDBt\n4tPBq/tu0UFvStsitX4RmQ6zmMVZg/LrquIQ3BBEGE+3SkF5nTbD2j+qBhNF5XI2\nIaolb0Hcbs8AsJyMmnslKE2IeeRSd2vNQsrPLBIYYlgIijztI7Pj5lb9zhSyJgdL\nNTgFepy1AgMBAAECggEAOXeXRAhHp6HceVCwLIupK43a61KTUkFAZrI/erqdrkBa\n5HDWT5c6xnlKd6zQwYKjkhjIRIruWfuhEdYB5+qacd5TeRoz6sWDXGQLgaJklnlD\ncOpzNr+I7f01w96Rkaw5/SMtNrPyB5oempfeb9yvFQ9UdG758Pq7aUCoV/9xVKHQ\nHxPByXBLMJuo9vDtJ2IX7hWtq0wSeAHUo0FlM0W7b/1V3fTJA+2c5ENlede9aWUb\nkl3cSlspH6FddEKX9WFF59cGP7IdEGpTaS2HoVpV4dEAHrZ3zq3gMr5cLSg4obUj\nK01qdY1y3C9VwwzKBAPm65VfOaOikoF8PoAmSgiwJwKBgQDxAV9sZ/LMLYcawbmp\nwC+lHBtaCvNGXV7IM0qUrxTFtpdIlPc6oZEyJHksZ3aNLkXOjk3qXcSg9Ypu05GS\nqxrkgabzU2QY9B7UB0rpKZfn7Zd5gHmrAozMTg6s8gC+SJkyV8AL+6X/Hki6IvU5\noALNgKvpxN6zqW4WcUnn7NoLXwKBgQDMOrtzLkIgvYqwnJAQFiKqoh5SfNtCLu8Z\nKTTEPGR0PQJmA3PV67eIeDMvAIwCPrIOmUqcOkHX9xxDUPayywRC9215JGkoS6Dd\nOIEM8RKpUWbYJdQ6NPj6FuAjZpBjSW6ABnnu/fkCeB1Dgd9PBmaXNbz2FGceuHzi\nwbKIAlGkawKBgQDmPdt942jPqwcRhtXq2BIseMegpCl5paXxOR8dII6FvESXMMlo\nGAZwkuu4gjd99SD3jnfdWSuKYkmYS0MdjZ2phDuM5rQQKthw0267heL7zb4Sc6zI\ntSzx2finPKN9JjpFIBP23rjdG397Y/5GyRkkXrLeKBhiJ5Fmm2Bx05MTnQKBgHqm\nMvjDKRd8fRP/kkz23i7XWZp0PUEL6q+TnYrUMgfUs+IL5L7t5rTgauypSWv3tvsp\neDNGkVBfqOuMbfuGDLMi4O3FvhljAeKZEndxN6HTrw3T+hZSxct7fXQFHmViLihY\nu1WZ1Ld05y4pirBsyaO5tBecvSkn5mhPpyYjLmCtAoGBAKN1eQCUF4l7MenBy/GF\nh/FgV+58kdw8MUNigMI4fcuDTTxdDSZON0eW+Bw/8gHkFDQqHbIrkbCwzrN4QQ5Q\nlyPrSRHMspIUZHj9f5RhdolRmsKc85/yONEpbHU2O83OUOFXz7tbtWfBDK7sNQL6\nEp0Ah3ZCmNQgxTPPGJIp+m+2\n-----END PRIVATE KEY-----\n",
+            "client_email" => "firebase-adminsdk-7hzlw@catalog-cce7f.iam.gserviceaccount.com"
+        ];
+    
+        // Setează detaliile token-ului
+        $header = [
+            "alg" => "RS256",
+            "typ" => "JWT"
+        ];
+    
+        $nowSeconds = time();
+        $payload = [
+            "iss" => $serviceAccount['client_email'],       // Email-ul clientului din JSON
+            "sub" => $serviceAccount['client_email'],       // Email-ul clientului din JSON
+            "aud" => "https://firestore.googleapis.com/",   // Adresa Firestore
+            "iat" => $nowSeconds,                           // Timpul curent
+            "exp" => $nowSeconds + 3600                     // Tokenul expiră după 1 oră
+        ];
+    
+        // Codifică header-ul și payload-ul în Base64
+        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($header)));
+        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($payload)));
+    
+        // Creează semnătura
+        $unsignedToken = $base64UrlHeader . "." . $base64UrlPayload;
+        openssl_sign($unsignedToken, $signature, $serviceAccount['private_key'], OPENSSL_ALGO_SHA256);
+        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+    
+        // Returnează token-ul complet
+        return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+    }
+    
 
     public static function addNewsAction($args = array(), $update_news = 0) {
         self::checkAuthentication();
         $db = new DB();
         $news = array("title" => "", "author" => "", "date" => "", "time" => "", "content" => "", "updated" => "", "id" => "");
         $news_id = 0;
-
+    
         if ($args && $args[0]) {
             $news_id = (int)$args[0];
-            $news = $db->loadNews($news_id);  
+            $news = $db->loadNews($news_id);
             if (!$news) {
                 appTemplate::redirect(appTemplate::getBaseUrl());
             }
             $news["date"] = date("Y-m-d", strtotime($news["created"]));
             $news["time"] = date("H:i", strtotime($news["created"]));
         }
-
+    
         if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $news_id = $db->saveNews($news_id);
+    
+            // Obține emailul utilizatorului curent
+            $currentUserEmail = $_SESSION['email'] ?? null; // Emailul utilizatorului
+            $newsTitle = htmlspecialchars($_POST['title']); // Titlul știrii
+    
+            if (!empty($currentUserEmail)) {
+                // Datele necesare pentru extensia Firebase Email
+                $emailData = [
+                    "fields" => [
+                        "to" => ["stringValue" => $currentUserEmail],
+                        "message" => [
+                            "mapValue" => [
+                                "fields" => [
+                                    "subject" => ["stringValue" => "Știrea ta a fost postată cu succes!"],
+                                    "text" => ["stringValue" => "Salut,\n\nȘtirea ta intitulată \"" . $newsTitle . "\" a fost postată cu succes pe platformă.\n\nMulțumim că ai contribuit!\n\nEchipa"]
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+    
+                // URL Firebase Firestore API pentru colecția `mail`
+                $firebaseUrl = "https://firestore.googleapis.com/v1/projects/catalog-cce7f/databases/(default)/documents/mail";
+    
+                // Token Firebase din variabilele de mediu
+                $firebaseToken = self::generateFirebaseAuthToken();
+    
+                // Trimite documentul în colecția `mail`
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $firebaseUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    "Authorization: Bearer $firebaseToken",
+                    "Content-Type: application/json"
+                ]);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($emailData));
+    
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+                curl_close($ch);
+    
+                if ($httpCode >= 400) {
+                    error_log("Eroare la trimiterea emailului prin Firebase: $response");
+                }
+            }
+    
             appTemplate::redirect(appTemplate::getBaseUrl());
         }
-
+    
         $view = new appTemplate("news/add.phtml");
         $view->set("pageTitle", $news_id ? "Edit News #" . (int)$news['id'] : "Add News");
         $view->set("news_id", (int)$news['id']);
@@ -216,10 +299,12 @@ class appController {
         $view->set("input_date", htmlspecialchars($news['date']));
         $view->set("input_time", htmlspecialchars($news['time']));
         $view->set("input_content", htmlspecialchars($news['content']));
-
+    
         return appTemplate::loadLayout(array("content" => $view->output(), "title" => $news_id ? "Edit News" : "Add News"));
     }
-
+    
+    
+    
     public static function updateNewsAction($args = array()) {
         self::checkAuthentication();
         return appController::addNewsAction($args, 1);
