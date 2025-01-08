@@ -122,8 +122,9 @@ class appController {
         self::checkAuthentication();
     
         $db = new DB();
-        $internalNews = $db->getAllNews(); // Toate știrile interne
-        $externalNews = self::fetchExternalNews(); // Toate știrile externe
+        $query = ""; // Exportăm toate știrile interne fără filtrare
+        $internalNews = $db->getNewsByQuery($query); // Similar cu metoda din indexAction
+        $externalNews = self::fetchExternalNews(); // Știrile externe
     
         // Numele fișierului CSV
         $filename = "news_export_" . date("Y-m-d_H-i-s") . ".csv";
@@ -141,6 +142,9 @@ class appController {
         // Scrie știrile interne în fișierul CSV
         if (is_array($internalNews)) {
             foreach ($internalNews as $post) {
+                $baseUrl = appTemplate::getBaseUrl();
+                $fullPermalink = $baseUrl . '/view/' . htmlspecialchars($post['permalink']);
+                
                 fputcsv($output, [
                     $post['id'],
                     $post['title'],
@@ -148,7 +152,7 @@ class appController {
                     date("Y-m-d H:i", strtotime($post['created'])),
                     $post['content'],
                     'Internă',
-                    appTemplate::getBaseUrl() . '/view/' . $post['permalink']
+                    $fullPermalink
                 ]);
             }
         }
@@ -171,6 +175,7 @@ class appController {
         fclose($output);
         exit; // Asigură-te că scriptul se oprește aici pentru a preveni afișarea altui conținut
     }
+    
     
 
     public static function viewNewsAction($args = array()) {
