@@ -17,7 +17,7 @@ class appController {
             $xpath = new DOMXPath($dom);
     
             // Extragerea articolelor
-            $articles = $xpath->query("//div[@class='article-content']");
+            $articles = $xpath->query("//article");
             $news = [];
             foreach ($articles as $article) {
                 $title = $xpath->query(".//h2/a", $article)->item(0)->textContent ?? '';
