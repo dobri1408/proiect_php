@@ -253,15 +253,16 @@ class appController {
     }
 
     public static function loginAction($args = array()) {
-        session_set_cookie_params([
-            'lifetime' => 3600, // Sesiunea expiră după 1 oră
-            'path' => '/',
-            'domain' => $_SERVER['HTTP_HOST'], // Domeniul aplicației
-            'secure' => isset($_SERVER['HTTPS']), // Setează true dacă aplicația rulează pe HTTPS
-            'httponly' => true, // Crește securitatea
-            'samesite' => 'Strict' // Opțional: Previne atacurile CSRF
-        ]);
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() == PHP_SESSION_NONE) {
+            // Modificăm parametrii cookie doar dacă sesiunea nu a fost pornită
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '', // Schimbați cu domeniul dvs. dacă este necesar
+                'secure' => true, // Asigurați-vă că utilizați HTTPS
+                'httponly' => true,
+                'samesite' => 'Strict', // Sau 'Lax' în funcție de cerințe
+            ]);
             session_start();
         }
         $error = "";
