@@ -156,61 +156,72 @@ class appController {
     
     public static function exportNewsToCSV() {
         self::checkAuthentication();
-    
+
         $db = new DB();
         $query = ""; // Exportăm toate știrile interne fără filtrare
         $internalNews = $db->getNewsByQuery($query); // Similar cu metoda din indexAction
         $externalNews = self::fetchExternalNews(); // Știrile externe
     
-        // Numele fișierului CSV
-        $filename = "news_export_" . date("Y-m-d_H-i-s") . ".csv";
+        // Include biblioteca TCPDF
+        require_once 'vendor/tecnickcom/tcpdf/tcpdf.php';
     
-        // Setează antetul pentru descărcarea fișierului
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        // Creează un nou document PDF
+        $pdf = new TCPDF();
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Platforma');
+        $pdf->SetTitle('Export Știri');
+        $pdf->SetHeaderData('', 0, 'Export Știri', 'Generat la: ' . date('Y-m-d H:i:s'));
+        $pdf->setHeaderFont(['helvetica', '', 10]);
+        $pdf->setFooterFont(['helvetica', '', 8]);
+        $pdf->SetMargins(15, 27, 15);
+        $pdf->SetHeaderMargin(5);
+        $pdf->SetFooterMargin(10);
+        $pdf->SetAutoPageBreak(TRUE, 10);
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->AddPage();
     
-        // Creează un flux de ieșire
-        $output = fopen('php://output', 'w');
+        // Scrie titlul în PDF
+        $pdf->Write(0, 'Export Știri', '', 0, 'L', true, 0, false, false, 0);
+        $pdf->Ln(5);
     
-        // Adaugă linia de antet
-        fputcsv($output, ['ID', 'Titlu', 'Autor', 'Data', 'Conținut/Rezumat', 'Tip', 'Link'], ',', '"', "\\");
-    
-        // Scrie știrile interne în fișierul CSV
+        // Conținutul știrilor
+        $html = '<h2>Știri Internă</h2>';
         if (is_array($internalNews)) {
             foreach ($internalNews as $post) {
                 $baseUrl = appTemplate::getBaseUrl();
                 $fullPermalink = $baseUrl . '/view/' . htmlspecialchars($post['permalink']);
-                
-                fputcsv($output, [
-                    $post['id'],
-                    $post['title'],
-                    $post['author'],
-                    date("Y-m-d H:i", strtotime($post['created'])),
-                    $post['content'],
-                    'Internă',
-                    $fullPermalink
-                ], ',', '"', "\\");
+    
+                $html .= '<h3>' . htmlspecialchars($post['title']) . '</h3>';
+                $html .= '<p><b>Autor:</b> ' . htmlspecialchars($post['author']) . '</p>';
+                $html .= '<p><b>Data:</b> ' . date("Y-m-d H:i", strtotime($post['created'])) . '</p>';
+                $html .= '<p>' . htmlspecialchars($post['content']) . '</p>';
+                $html .= '<p><a href="' . htmlspecialchars($fullPermalink) . '">' . htmlspecialchars($fullPermalink) . '</a></p>';
+                $html .= '<hr>';
             }
         }
     
-        // Scrie știrile externe în fișierul CSV
+        $html .= '<h2>Știri Externă</h2>';
         if (is_array($externalNews)) {
             foreach ($externalNews as $external) {
-                fputcsv($output, [
-                    'N/A', // ID-ul nu este disponibil pentru știrile externe
-                    $external['title'],
-                    'Extern',
-                    $external['date'],
-                    $external['summary'],
-                    'Externă',
-                    $external['link']
-                ], ',', '"', "\\");
+                $html .= '<h3>' . htmlspecialchars($external['title']) . '</h3>';
+                $html .= '<p><b>Autor:</b> Extern</p>';
+                $html .= '<p><b>Data:</b> ' . htmlspecialchars($external['date']) . '</p>';
+                $html .= '<p>' . htmlspecialchars($external['summary']) . '</p>';
+                $html .= '<p><a href="' . htmlspecialchars($external['link']) . '">' . htmlspecialchars($external['link']) . '</a></p>';
+                $html .= '<hr>';
             }
         }
     
-        fclose($output);
-        exit; // Asigură-te că scriptul se oprește aici pentru a preveni afișarea altui conținut
-    }
+        // Adaugă conținutul în PDF
+        $pdf->writeHTML($html, true, false, true, false, '');
+    
+        // Numele fișierului PDF
+        $filename = "news_export_" . date("Y-m-d_H-i-s") . ".pdf";
+    
+        // Output PDF
+        $pdf->Output($filename, 'D');
+        exit; // Asigură-te că scriptul se oprește aici
+          }
     
     
 
