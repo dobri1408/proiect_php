@@ -171,13 +171,13 @@ class appController {
         $pdf->SetAuthor('Platforma');
         $pdf->SetTitle('Export Știri');
         $pdf->SetHeaderData('', 0, 'Export Știri', 'Generat la: ' . date('Y-m-d H:i:s'));
-        $pdf->setHeaderFont(['helvetica', '', 10]);
-        $pdf->setFooterFont(['helvetica', '', 8]);
+        $pdf->setHeaderFont(['dejavusans', '', 10]);
+        $pdf->setFooterFont(['dejavusans', '', 8]);
         $pdf->SetMargins(15, 27, 15);
         $pdf->SetHeaderMargin(5);
         $pdf->SetFooterMargin(10);
         $pdf->SetAutoPageBreak(TRUE, 10);
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont('dejavusans', '', 10);
         $pdf->AddPage();
     
         // Scrie titlul în PDF
