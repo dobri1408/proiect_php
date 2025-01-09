@@ -298,16 +298,18 @@ class appController {
     }
 
     private static function checkAuthentication() {
-        session_set_cookie_params([
-            'lifetime' => 3600, // Sesiunea expiră după 1 oră
-            'path' => '/',
-            'domain' => $_SERVER['HTTP_HOST'], // Domeniul aplicației
-            'secure' => isset($_SERVER['HTTPS']), // Setează true dacă aplicația rulează pe HTTPS
-            'httponly' => true, // Crește securitatea
-            'samesite' => 'Strict' // Opțional: Previne atacurile CSRF
-        ]);
+   
         if (session_status() === PHP_SESSION_NONE) {
+            session_set_cookie_params([
+                'lifetime' => 3600, // Sesiunea expiră după 1 oră
+                'path' => '/',
+                'domain' => $_SERVER['HTTP_HOST'], // Domeniul aplicației
+                'secure' => isset($_SERVER['HTTPS']), // Setează true dacă aplicația rulează pe HTTPS
+                'httponly' => true, // Crește securitatea
+                'samesite' => 'Strict' // Opțional: Previne atacurile CSRF
+            ]);
             session_start();
+            
         }
         if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
             appTemplate::redirect(appTemplate::getBaseUrl() . "/login");
